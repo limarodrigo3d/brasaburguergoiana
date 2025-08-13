@@ -2,11 +2,20 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Image from "next/image";
 import { SITE } from "@/lib/site";
 
 /** Tipos */
 type Categoria = "tradicionais" | "frango" | "premium" | "acompanhamentos" | "bebidas";
-type Item = { id: string; name: string; desc?: string; price: number; category: Categoria };
+type Item = {
+  id: string;
+  name: string;
+  desc?: string;
+  price: number;
+  category: Categoria;
+  /** Coloque o caminho da foto aqui (ex.: "/menu/t01-hamburguer.jpg") */
+  image?: string;
+};
 
 /** Categorias */
 const CATEGORIES: { id: Categoria; label: string }[] = [
@@ -17,11 +26,11 @@ const CATEGORIES: { id: Categoria; label: string }[] = [
   { id: "bebidas", label: "Bebidas" },
 ];
 
-/** Itens do cardápio (baseados no PDF) */
+/** Itens do cardápio (adicione image quando tiver a foto em /public/menu/) */
 const ITEMS: Item[] = [
   // Tradicionais
-  { id: "t01", name: "Hambúrguer", desc: "Pão, bife, alface, tomate, batata palha.", price: 9, category: "tradicionais" },
-  { id: "t02", name: "X-Burguer", desc: "Pão, bife, mussarela, alface, tomate, batata palha.", price: 13, category: "tradicionais" },
+  { id: "t01", name: "Hambúrguer", desc: "Pão, bife, alface, tomate, batata palha.", price: 9, category: "tradicionais" /*, image: "/menu/t01-hamburguer.jpg"*/ },
+  { id: "t02", name: "X-Burguer", desc: "Pão, bife, mussarela, alface, tomate, batata palha.", price: 13, category: "tradicionais" /*, image: "/menu/t02-x-burguer.jpg"*/ },
   { id: "t03", name: "X-Presunto", desc: "Pão, bife, mussarela, presunto, alface, tomate, batata palha.", price: 16, category: "tradicionais" },
   { id: "t04", name: "X-Egg", desc: "Pão, bife, mussarela, ovo, alface, tomate, batata palha.", price: 16, category: "tradicionais" },
   { id: "t05", name: "X-Bacon", desc: "Pão, bife, mussarela, bacon, alface, tomate, batata palha.", price: 18, category: "tradicionais" },
@@ -103,7 +112,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen">
-      {/* Abas de categorias (Navbar já está no layout) */}
+      {/* Abas de categorias */}
       <nav className="mx-auto max-w-screen-sm px-4 pt-3 pb-3 flex gap-2 overflow-x-auto">
         {CATEGORIES.map((c) => (
           <button
@@ -125,9 +134,24 @@ export default function Page() {
             <div className="grid gap-4">
               {ITEMS.filter((i) => i.category === cat.id).map((i) => (
                 <article key={i.id} className="card flex gap-3">
-                  <div className="w-20 h-20 rounded-lg bg-black/40 border border-white/10 grid place-items-center text-white/60 text-xs">
-                    84×84
+                  {/* Foto do item (ou placeholder) */}
+                  <div className="w-20 h-20 rounded-lg border border-white/10 overflow-hidden bg-black/40">
+                    {i.image ? (
+                      <Image
+                        src={i.image}
+                        alt={i.name}
+                        width={84}
+                        height={84}
+                        className="h-full w-full object-cover"
+                        priority={false}
+                      />
+                    ) : (
+                      <div className="grid place-items-center w-full h-full text-white/60 text-xs">
+                        84×84
+                      </div>
+                    )}
                   </div>
+
                   <div className="flex-1">
                     <p className="m-0 font-semibold">{i.name}</p>
                     {i.desc && <p className="m-0 text-sm text-white/70">{i.desc}</p>}
