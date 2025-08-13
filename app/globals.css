@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Tema básico escuro */
+:root{
+  --bg: #0a0a0b;
+  --text: #f6f7f8;
+  --muted: #b8bcc6;
+  --card: rgba(16,16,18,.55);
+  --card-border: rgba(255,255,255,.10);
+  --brand: #22c55e;
+}
+
+html, body { height: 100%; }
+
+body{
+  color: var(--text);
+  background:
+    linear-gradient(180deg, rgba(6,6,8,.94), rgba(6,6,8,.94)),
+    url('/bg-brasa.jpg') center / cover fixed no-repeat;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection{ background: rgba(34,197,94,.35); color:#fff; }
+a{ color: inherit; text-decoration: none; }
+
+.card{
+  @apply rounded-2xl p-3 sm:p-4;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(8px);
+}
+
+.chip{
+  @apply px-3 py-2 rounded-full border text-sm whitespace-nowrap transition;
+  background: rgba(0,0,0,.50);
+  border-color: rgba(255,255,255,.12);
+}
+.chip--active{
+  background: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.28);
+}
+
+*::-webkit-scrollbar{ height:8px; width:8px; }
+*::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.14); border-radius:999px; }
+*::-webkit-scrollbar-track{ background: transparent; }
+
+:focus-visible{ outline: 2px solid var(--brand); outline-offset: 2px; }
+.container-narrow{ max-width: 40rem; margin-inline:auto; padding-inline:1rem; }
