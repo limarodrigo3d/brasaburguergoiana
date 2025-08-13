@@ -6,27 +6,32 @@ import Image from "next/image";
 import { SITE } from "@/lib/site";
 
 /** Tipos */
-type Categoria = "tradicionais" | "frango" | "premium" | "acompanhamentos" | "bebidas";
+type Categoria =
+  | "tradicionais"
+  | "frango"
+  | "artesanais"
+  | "acompanhamentos"
+  | "bebidas";
+
 type Item = {
   id: string;
   name: string;
   desc?: string;
   price: number;
   category: Categoria;
-  /** Coloque o caminho da foto aqui (ex.: "/menu/t01-hamburguer.jpg") */
-  image?: string;
+  image?: string; // ex.: "/menu/t01-hamburguer.jpg"
 };
 
 /** Categorias */
 const CATEGORIES: { id: Categoria; label: string }[] = [
   { id: "tradicionais", label: "Tradicionais" },
   { id: "frango", label: "Frango (Ki-Cocó)" },
-  { id: "premium", label: "Linha Premium" },
+  { id: "artesanais", label: "Artesanais" },
   { id: "acompanhamentos", label: "Acompanhamentos" },
   { id: "bebidas", label: "Bebidas" },
 ];
 
-/** Itens do cardápio (adicione image quando tiver a foto em /public/menu/) */
+/** Itens do cardápio — adicione image quando tiver a foto em /public/menu/ */
 const ITEMS: Item[] = [
   // Tradicionais
   { id: "t01", name: "Hambúrguer", desc: "Pão, bife, alface, tomate, batata palha.", price: 9, category: "tradicionais" /*, image: "/menu/t01-hamburguer.jpg"*/ },
@@ -54,16 +59,16 @@ const ITEMS: Item[] = [
   { id: "f20", name: "Ki-Cocó Egg Bacon", desc: "Frango, milho, mussarela, ovo, bacon, alface, tomate, batata palha.", price: 21, category: "frango" },
   { id: "f21", name: "Ki-Cocó Tudo", desc: "Frango, milho, mussarela, presunto, catupiry, ovo, bacon, alface, tomate, batata palha.", price: 24, category: "frango" },
 
-  // Linha Premium
-  { id: "p01", name: "Especial 1", desc: "Brioche, blend 150g, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 21, category: "premium" },
-  { id: "p02", name: "Especial 2", desc: "Brioche, blend 150g, queijo, cebola caramelizada, bacon, onion rings, alface, tomate.", price: 25, category: "premium" },
-  { id: "p03", name: "Especial 3", desc: "Brioche, hambúrguer recheado (provolone ou prato), cebola caramelizada, bacon, alface, tomate.", price: 25, category: "premium" },
-  { id: "p04", name: "Especial 4", desc: "Brioche, frango empanado recheado com mussarela e presunto, cream cheese, alface, tomate, batata palha.", price: 21, category: "premium" },
-  { id: "p05", name: "Especial 5", desc: "Brioche, frango empanado recheado com mussarela, presunto, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "premium" },
-  { id: "p06", name: "Especial 6", desc: "Brioche, blend 150g, queijo, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "premium" },
-  { id: "p07", name: "Duplo Cheddar", desc: "Brioche, 2×100g, cheddar, cebola caramelizada, alface, tomate.", price: 23, category: "premium" },
-  { id: "p08", name: "Triplo Cheddar", desc: "Brioche, 3×100g, cheddar, cebola caramelizada, alface, tomate.", price: 27, category: "premium" },
-  { id: "p09", name: "Especial Mineiro", desc: "Brioche, blend 150g, queijo minas empanado, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 26, category: "premium" },
+  // Artesanais (antes: Linha Premium)
+  { id: "p01", name: "Especial 1", desc: "Brioche, blend 150g, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 21, category: "artesanais" },
+  { id: "p02", name: "Especial 2", desc: "Brioche, blend 150g, queijo, cebola caramelizada, bacon, onion rings, alface, tomate.", price: 25, category: "artesanais" },
+  { id: "p03", name: "Especial 3", desc: "Brioche, hambúrguer recheado (provolone ou prato), cebola caramelizada, bacon, alface, tomate.", price: 25, category: "artesanais" },
+  { id: "p04", name: "Especial 4", desc: "Brioche, frango empanado recheado com mussarela e presunto, cream cheese, alface, tomate, batata palha.", price: 21, category: "artesanais" },
+  { id: "p05", name: "Especial 5", desc: "Brioche, frango empanado recheado com mussarela, presunto, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "artesanais" },
+  { id: "p06", name: "Especial 6", desc: "Brioche, blend 150g, queijo, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "artesanais" },
+  { id: "p07", name: "Duplo Cheddar", desc: "Brioche, 2×100g, cheddar, cebola caramelizada, alface, tomate.", price: 23, category: "artesanais" },
+  { id: "p08", name: "Triplo Cheddar", desc: "Brioche, 3×100g, cheddar, cebola caramelizada, alface, tomate.", price: 27, category: "artesanais" },
+  { id: "p09", name: "Especial Mineiro", desc: "Brioche, blend 150g, queijo minas empanado, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 26, category: "artesanais" },
 
   // Acompanhamentos
   { id: "a01", name: "Batata Frita — Simples", desc: "Porção crocante.", price: 15, category: "acompanhamentos" },
@@ -79,8 +84,7 @@ const ITEMS: Item[] = [
 ];
 
 /** Utils */
-const currency = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const currency = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Page() {
   const [active, setActive] = useState<Categoria>("tradicionais");
@@ -112,8 +116,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen">
-      {/* Abas de categorias */}
-      <nav className="mx-auto max-w-screen-sm px-4 pt-3 pb-3 flex gap-2 overflow-x-auto">
+      {/* CATEGORIAS (destaque) */}
+      <nav
+        className="mx-auto max-w-screen-sm px-4 py-3 flex gap-2 overflow-x-auto
+                   bg-black/70 backdrop-blur rounded-xl border border-white/10
+                   shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+      >
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
@@ -126,7 +134,7 @@ export default function Page() {
         ))}
       </nav>
 
-      {/* Lista de produtos */}
+      {/* LISTA DE PRODUTOS */}
       <main className="mx-auto max-w-screen-sm px-4 pb-28">
         {CATEGORIES.map((cat) => (
           <section key={cat.id} className={active === cat.id ? "block" : "hidden"}>
@@ -143,7 +151,6 @@ export default function Page() {
                         width={84}
                         height={84}
                         className="h-full w-full object-cover"
-                        priority={false}
                       />
                     ) : (
                       <div className="grid place-items-center w-full h-full text-white/60 text-xs">
@@ -183,7 +190,7 @@ export default function Page() {
         ))}
       </main>
 
-      {/* Barra do carrinho */}
+      {/* BARRA DO CARRINHO */}
       <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/50 backdrop-blur">
         <div className="mx-auto max-w-screen-sm px-4 py-3 flex items-center gap-3">
           <div className="flex-1">
