@@ -30,6 +30,12 @@ type CartLine = {
   option?: string;
 };
 
+type PaymentMethod = "dinheiro" | "cartao" | "pix";
+
+/** Constantes */
+const PIX_KEY = "32999097894";
+const PIX_NAME = "Gustavo Henrique Toledo Moreira";
+
 /** Categorias (abas) */
 const CATEGORIES: { id: Categoria; label: string }[] = [
   { id: "tradicionais", label: "Tradicionais" },
@@ -109,38 +115,56 @@ const ITEMS: Item[] = [
 const currency = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-/** cria a chave única por linha de carrinho:
- *  - se tiver opção -> `${id}:${opção}`
- *  - senão -> `id`
- */
+/** formata um número inteiro de centavos para "99,99" */
+const centsToMask = (cents: number) => {
+  const v = Math.max(0, cents | 0);
+  const s = (v / 100).toFixed(2).replace(".", ",");
+  return s;
+};
+/** extrai só dígitos e converte para centavos */
+const inputToCents = (raw: string) => {
+  const digits = (raw.match(/\d+/g) || []).join("");
+  return digits ? parseInt(digits, 10) : 0;
+};
+
+/** chave única por linha (id:opção quando houver) */
 const lineKeyOf = (item: Item, option?: string) =>
   item.options?.length && option ? `${item.id}:${option}` : item.id;
 
 export default function Page() {
   const [active, setActive] = useState<Categoria>("tradicionais");
-
-  // carrinho por linha (id:opção)
   const [cart, setCart] = useState<Record<string, CartLine>>({});
-
-  // opção selecionada por item (para o seletor do card)
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
+  /** Pagamento */
+  const [payMethod, setPayMethod] = useState<PaymentMethod | "">("");
+  const [cashChangeCents, setCashChangeCents] = useState<number>(0);
+  const [copied, setCopied] = useState(false);
+
+  /** verifica se há pelo menos um lanche (tradicionais/frango/artesanais) no carrinho */
+  const hasAnySandwich = useMemo(
+    () =>
+      Object.values(cart).some((l) =>
+        ["tradicionais", "frango", "artesanais"].includes(l.item.category)
+      ),
+    [cart]
+  );
+
   function add(i: Item) {
-    // se exige opção, garantir seleção
     const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
     if (i.options?.length && !chosen) {
       alert(`Escolha uma opção para "${i.name}" antes de adicionar.`);
       return;
     }
-
+    // bloquear acréscimos sem lanche
+    if (i.id === "a04" && !hasAnySandwich) {
+      alert("Para adicionar Acréscimos, primeiro adicione um lanche ao carrinho.");
+      return;
+    }
     const key = lineKeyOf(i, chosen);
     setCart((c) => ({
       ...c,
-      [key]: {
-        item: i,
-        qty: (c[key]?.qty || 0) + 1,
-        option: chosen,
-      },
+      [key]: { item: i, qty: (c[key]?.qty || 0) + 1, option: chosen },
     }));
   }
 
@@ -162,14 +186,65 @@ export default function Page() {
   const items = useMemo(() => Object.values(cart), [cart]);
   const total = useMemo(() => items.reduce((a, b) => a + b.item.price * b.qty, 0), [items]);
 
+  /** resumo por grupo para itens com opções (exibe na barra e no WhatsApp) */
+  const optionGroups = useMemo(() => {
+    const groups: Record<string, Record<string, number>> = {};
+    items.forEach(({ item, qty, option }) => {
+      if (!option) return;
+      const base = item.name;
+      groups[base] ||= {};
+      groups[base][option] = (groups[base][option] || 0) + qty;
+    });
+    return groups;
+  }, [items]);
+
+  async function copyPix() {
+    try {
+      await navigator.clipboard.writeText(PIX_KEY);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      alert("Não foi possível copiar. Copie manualmente: " + PIX_KEY);
+    }
+  }
+
   function sendWhats() {
     if (!items.length) return alert("Seu pedido está vazio.");
+    if (!payMethod) return alert("Selecione um método de pagamento.");
+    if (payMethod === "dinheiro" && cashChangeCents < 0) {
+      return alert("Informe um valor válido para o troco.");
+    }
+
     let text = "Olá! Gostaria de fazer o pedido:\n\n";
     items.forEach(({ item, qty, option }) => {
       text += `• ${item.name} × ${qty}`;
       if (option) text += ` (${option})`;
       text += ` — ${currency(item.price)}\n`;
     });
+
+    // resumo por grupo
+    const groupLines = Object.entries(optionGroups).map(([base, opts]) => {
+      const parts = Object.entries(opts).map(([opt, q]) => `${q}× ${opt}`).join(", ");
+      return `- ${base}: ${parts}`;
+    });
+    if (groupLines.length) {
+      text += `\nResumo de opções:\n${groupLines.join("\n")}\n`;
+    }
+
+    // pagamento
+    text += `\nPagamento: `;
+    if (payMethod === "dinheiro") {
+      const trocoInfo =
+        cashChangeCents > 0
+          ? ` (troco para ${currency(cashChangeCents / 100)})`
+          : " (sem troco)";
+      text += `Dinheiro${trocoInfo}\n`;
+    } else if (payMethod === "cartao") {
+      text += "Cartão\n";
+    } else if (payMethod === "pix") {
+      text += `PIX — chave ${PIX_KEY} (${PIX_NAME})\n`;
+    }
+
     text += `\nTotal: ${currency(total)}\n`;
     window.location.href = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
   }
@@ -191,18 +266,15 @@ export default function Page() {
       </nav>
 
       {/* LISTA DE PRODUTOS */}
-      <main className="mx-auto max-w-screen-sm px-4 pb-28">
+      <main className="mx-auto max-w-screen-sm px-4 pb-48">
         {CATEGORIES.map((cat) => (
           <section key={cat.id} className={active === cat.id ? "block" : "hidden"}>
             <h2 className="mt-5 mb-3 text-lg font-semibold">{cat.label}</h2>
             <div className="grid gap-4">
               {ITEMS.filter((i) => i.category === cat.id).map((i) => {
-                // quantidade exibida para itens com opção = qty da linha correspondente à opção selecionada
-                const displayQty = (() => {
-                  const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
-                  const key = lineKeyOf(i, chosen);
-                  return cart[key]?.qty || 0;
-                })();
+                const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
+                const key = lineKeyOf(i, chosen);
+                const displayQty = cart[key]?.qty || 0;
 
                 return (
                   <article key={i.id} className="card flex gap-3">
@@ -263,23 +335,109 @@ export default function Page() {
         ))}
       </main>
 
-      {/* CARRINHO */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/50 backdrop-blur">
-        <div className="mx-auto max-w-screen-sm px-4 py-3 flex items-center gap-3">
-          <div className="flex-1">
-            <div className="text-sm text-white/70">Seu pedido</div>
-            <div className="text-lg font-extrabold" aria-live="polite">
-              {items.length ? `${items.length} item(ns) • ${currency(total)}` : "Vazio"}
+      {/* CARRINHO + PAGAMENTO */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/60 backdrop-blur">
+        <div className="mx-auto max-w-screen-sm px-4 py-3 flex flex-col gap-3">
+          {/* resumo topo */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <div className="text-sm text-white/70">Seu pedido</div>
+              <div className="text-lg font-extrabold" aria-live="polite">
+                {items.length ? `${items.length} item(ns) • ${currency(total)}` : "Vazio"}
+              </div>
             </div>
+            <button
+              onClick={sendWhats}
+              className="rounded-xl bg-emerald-500 px-4 py-3 font-extrabold text-emerald-950 disabled:opacity-60"
+              disabled={!items.length}
+              aria-disabled={!items.length}
+            >
+              Pedir no WhatsApp
+            </button>
           </div>
-          <button
-            onClick={sendWhats}
-            className="rounded-xl bg-emerald-500 px-4 py-3 font-extrabold text-emerald-950 disabled:opacity-60"
-            disabled={!items.length}
-            aria-disabled={!items.length}
-          >
-            Pedir no WhatsApp
-          </button>
+
+          {/* resumo por grupo (quando houver opções) */}
+          {!!Object.keys(optionGroups).length && (
+            <div className="text-xs text-white/70 leading-snug">
+              {Object.entries(optionGroups).map(([base, opts]) => {
+                const parts = Object.entries(opts)
+                  .map(([opt, q]) => `${q}× ${opt}`)
+                  .join(", ");
+                return (
+                  <div key={base}>
+                    <span className="font-semibold text-white/80">{base}:</span> {parts}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* pagamento */}
+          <div className="grid gap-2 text-sm">
+            <div className="font-semibold text-white/80">Pagamento na entrega</div>
+            <div className="flex flex-wrap gap-3 items-center">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="pay"
+                  value="dinheiro"
+                  checked={payMethod === "dinheiro"}
+                  onChange={() => setPayMethod("dinheiro")}
+                />
+                Dinheiro
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="pay"
+                  value="cartao"
+                  checked={payMethod === "cartao"}
+                  onChange={() => setPayMethod("cartao")}
+                />
+                Cartão
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="pay"
+                  value="pix"
+                  checked={payMethod === "pix"}
+                  onChange={() => setPayMethod("pix")}
+                />
+                PIX
+              </label>
+            </div>
+
+            {payMethod === "dinheiro" && (
+              <div className="flex items-center gap-2">
+                <span>Troco para R$</span>
+                <input
+                  inputMode="numeric"
+                  placeholder="0,00"
+                  value={centsToMask(cashChangeCents)}
+                  onChange={(e) => setCashChangeCents(inputToCents(e.target.value))}
+                  className="w-28 rounded-md border border-white/20 bg-black/40 p-1 text-center"
+                  aria-label="Troco para"
+                />
+                <span className="text-xs text-white/60">(deixe em branco para sem troco)</span>
+              </div>
+            )}
+
+            {payMethod === "pix" && (
+              <div className="flex flex-wrap items-center gap-2 text-white/80">
+                <div>
+                  Chave PIX: <span className="font-semibold">{PIX_KEY}</span> —{" "}
+                  <span className="font-semibold">{PIX_NAME}</span>
+                </div>
+                <button
+                  onClick={copyPix}
+                  className="ml-auto rounded-md border border-white/20 bg-black/30 px-2 py-1 text-xs hover:bg-black/40"
+                >
+                  {copied ? "Copiado!" : "Copiar chave"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
