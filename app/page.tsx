@@ -19,10 +19,18 @@ type Item = {
   desc?: string;
   price: number;
   category: Categoria;
-  image?: string; // ex.: "/menu/t01-hamburguer.jpg"
+  image?: string;
+  /** quando o item exige escolha (p.ex.: Batata Completa / Acréscimos) */
+  options?: string[];
 };
 
-/** Categorias */
+type CartLine = {
+  item: Item;
+  qty: number;
+  option?: string;
+};
+
+/** Categorias (abas) */
 const CATEGORIES: { id: Categoria; label: string }[] = [
   { id: "tradicionais", label: "Tradicionais" },
   { id: "frango", label: "Frango (Ki-Cocó)" },
@@ -31,49 +39,63 @@ const CATEGORIES: { id: Categoria; label: string }[] = [
   { id: "bebidas", label: "Bebidas" },
 ];
 
-/** Itens do cardápio — adicione image quando tiver a foto em /public/menu/ */
+/** Itens do cardápio */
 const ITEMS: Item[] = [
-  // Tradicionais
-  { id: "t01", name: "Hambúrguer", desc: "Pão, bife, alface, tomate, batata palha.", price: 9, category: "tradicionais" /*, image: "/menu/t01-hamburguer.jpg"*/ },
-  { id: "t02", name: "X-Burguer", desc: "Pão, bife, mussarela, alface, tomate, batata palha.", price: 13, category: "tradicionais" /*, image: "/menu/t02-x-burguer.jpg"*/ },
-  { id: "t03", name: "X-Presunto", desc: "Pão, bife, mussarela, presunto, alface, tomate, batata palha.", price: 16, category: "tradicionais" },
-  { id: "t04", name: "X-Egg", desc: "Pão, bife, mussarela, ovo, alface, tomate, batata palha.", price: 16, category: "tradicionais" },
-  { id: "t05", name: "X-Bacon", desc: "Pão, bife, mussarela, bacon, alface, tomate, batata palha.", price: 18, category: "tradicionais" },
-  { id: "t06", name: "X-Egg Presunto", desc: "Pão, bife, mussarela, ovo, presunto, alface, tomate, batata palha.", price: 18, category: "tradicionais" },
-  { id: "t07", name: "X-Egg Bacon", desc: "Pão, bife, mussarela, ovo, bacon, alface, tomate, batata palha.", price: 19, category: "tradicionais" },
-  { id: "t08", name: "X-Tudo", desc: "Pão, bife, mussarela, presunto, ovo, bacon, frango desfiado, milho, alface, tomate, batata palha.", price: 24, category: "tradicionais" },
-  { id: "t09", name: "Hamburgão", desc: "Pão, 2 bifes, alface, tomate, batata palha.", price: 14, category: "tradicionais" },
-  { id: "t10", name: "X-Burgão", desc: "Pão, 2 bifes, mussarela, alface, tomate, batata palha.", price: 17, category: "tradicionais" },
-  { id: "t11", name: "X-Calabresa", desc: "Pão, bife, mussarela, calabresa, alface, tomate, batata palha.", price: 18, category: "tradicionais" },
-  { id: "t22", name: "X-Catupiry", desc: "Pão, bife, mussarela, catupiry, alface, tomate, batata palha.", price: 16, category: "tradicionais" },
+  // Tradicionais (+1 real)
+  { id: "t01", name: "Hambúrguer", desc: "Pão, bife, alface, tomate, batata palha.", price: 10, category: "tradicionais" },
+  { id: "t02", name: "X-Burguer", desc: "Pão, bife, mussarela, alface, tomate, batata palha.", price: 14, category: "tradicionais" },
+  { id: "t03", name: "X-Presunto", desc: "Pão, bife, mussarela, presunto, alface, tomate, batata palha.", price: 17, category: "tradicionais" },
+  { id: "t04", name: "X-Egg", desc: "Pão, bife, mussarela, ovo, alface, tomate, batata palha.", price: 17, category: "tradicionais" },
+  { id: "t05", name: "X-Bacon", desc: "Pão, bife, mussarela, bacon, alface, tomate, batata palha.", price: 19, category: "tradicionais" },
+  { id: "t06", name: "X-Egg Presunto", desc: "Pão, bife, mussarela, ovo, presunto, alface, tomate, batata palha.", price: 19, category: "tradicionais" },
+  { id: "t07", name: "X-Egg Bacon", desc: "Pão, bife, mussarela, ovo, bacon, alface, tomate, batata palha.", price: 20, category: "tradicionais" },
+  { id: "t08", name: "X-Tudo", desc: "Pão, bife, mussarela, presunto, ovo, bacon, frango desfiado, milho, alface, tomate, batata palha.", price: 25, category: "tradicionais" },
+  { id: "t09", name: "Hamburgão", desc: "Pão, 2 bifes, alface, tomate, batata palha.", price: 15, category: "tradicionais" },
+  { id: "t10", name: "X-Burgão", desc: "Pão, 2 bifes, mussarela, alface, tomate, batata palha.", price: 18, category: "tradicionais" },
+  { id: "t11", name: "X-Calabresa", desc: "Pão, bife, mussarela, calabresa, alface, tomate, batata palha.", price: 19, category: "tradicionais" },
+  { id: "t22", name: "X-Catupiry", desc: "Pão, bife, mussarela, catupiry, alface, tomate, batata palha.", price: 17, category: "tradicionais" },
 
-  // Frango — Ki-Cocó
-  { id: "f12", name: "Ki-Cocó", desc: "Pão, frango desfiado, milho, mussarela, alface, tomate, batata palha.", price: 16, category: "frango" },
-  { id: "f13", name: "Ki-Cocó Presunto", desc: "Frango, milho, mussarela, presunto, alface, tomate, batata palha.", price: 18, category: "frango" },
-  { id: "f14", name: "Ki-Cocó Egg", desc: "Frango, milho, mussarela, ovo, alface, tomate, batata palha.", price: 18, category: "frango" },
-  { id: "f15", name: "Ki-Cocó Bacon", desc: "Frango, milho, mussarela, bacon, alface, tomate, batata palha.", price: 19, category: "frango" },
-  { id: "f16", name: "Ki-Cocó Calabresa", desc: "Frango, milho, mussarela, calabresa, alface, tomate, batata palha.", price: 19, category: "frango" },
-  { id: "f17", name: "Ki-Cocó Catupiry", desc: "Frango, milho, mussarela, catupiry, alface, tomate, batata palha.", price: 19, category: "frango" },
-  { id: "f18", name: "Ki-Cocó Bacon Presunto", desc: "Frango, milho, mussarela, bacon, presunto, alface, tomate, batata palha.", price: 20, category: "frango" },
-  { id: "f19", name: "Ki-Cocó Egg Presunto", desc: "Frango, milho, mussarela, ovo, presunto, alface, tomate, batata palha.", price: 20, category: "frango" },
-  { id: "f20", name: "Ki-Cocó Egg Bacon", desc: "Frango, milho, mussarela, ovo, bacon, alface, tomate, batata palha.", price: 21, category: "frango" },
-  { id: "f21", name: "Ki-Cocó Tudo", desc: "Frango, milho, mussarela, presunto, catupiry, ovo, bacon, alface, tomate, batata palha.", price: 24, category: "frango" },
+  // Frango — Ki-Cocó (+1 real)
+  { id: "f12", name: "Ki-Cocó", desc: "Pão, frango desfiado, milho, mussarela, alface, tomate, batata palha.", price: 17, category: "frango" },
+  { id: "f13", name: "Ki-Cocó Presunto", desc: "Frango, milho, mussarela, presunto, alface, tomate, batata palha.", price: 19, category: "frango" },
+  { id: "f14", name: "Ki-Cocó Egg", desc: "Frango, milho, mussarela, ovo, alface, tomate, batata palha.", price: 19, category: "frango" },
+  { id: "f15", name: "Ki-Cocó Bacon", desc: "Frango, milho, mussarela, bacon, alface, tomate, batata palha.", price: 20, category: "frango" },
+  { id: "f16", name: "Ki-Cocó Calabresa", desc: "Frango, milho, mussarela, calabresa, alface, tomate, batata palha.", price: 20, category: "frango" },
+  { id: "f17", name: "Ki-Cocó Catupiry", desc: "Frango, milho, mussarela, catupiry, alface, tomate, batata palha.", price: 20, category: "frango" },
+  { id: "f18", name: "Ki-Cocó Bacon Presunto", desc: "Frango, milho, mussarela, bacon, presunto, alface, tomate, batata palha.", price: 21, category: "frango" },
+  { id: "f19", name: "Ki-Cocó Egg Presunto", desc: "Frango, milho, mussarela, ovo, presunto, alface, tomate, batata palha.", price: 21, category: "frango" },
+  { id: "f20", name: "Ki-Cocó Egg Bacon", desc: "Frango, milho, mussarela, ovo, bacon, alface, tomate, batata palha.", price: 22, category: "frango" },
+  { id: "f21", name: "Ki-Cocó Tudo", desc: "Frango, milho, mussarela, presunto, catupiry, ovo, bacon, alface, tomate, batata palha.", price: 25, category: "frango" },
 
-  // Artesanais (antes: Linha Premium)
+  // Artesanais
   { id: "p01", name: "Especial 1", desc: "Brioche, blend 150g, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 21, category: "artesanais" },
   { id: "p02", name: "Especial 2", desc: "Brioche, blend 150g, queijo, cebola caramelizada, bacon, onion rings, alface, tomate.", price: 25, category: "artesanais" },
-  { id: "p03", name: "Especial 3", desc: "Brioche, hambúrguer recheado (provolone ou prato), cebola caramelizada, bacon, alface, tomate.", price: 25, category: "artesanais" },
+  { id: "p03", name: "Especial 3", desc: "Pão brioche, blend 150g, provolone, queijo cheddar ou prato, cebola caramelizada, bacon, alface e tomate.", price: 25, category: "artesanais" },
   { id: "p04", name: "Especial 4", desc: "Brioche, frango empanado recheado com mussarela e presunto, cream cheese, alface, tomate, batata palha.", price: 21, category: "artesanais" },
   { id: "p05", name: "Especial 5", desc: "Brioche, frango empanado recheado com mussarela, presunto, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "artesanais" },
   { id: "p06", name: "Especial 6", desc: "Brioche, blend 150g, queijo, bacon, cream cheese, alface, tomate, batata palha.", price: 25, category: "artesanais" },
   { id: "p07", name: "Duplo Cheddar", desc: "Brioche, 2×100g, cheddar, cebola caramelizada, alface, tomate.", price: 23, category: "artesanais" },
   { id: "p08", name: "Triplo Cheddar", desc: "Brioche, 3×100g, cheddar, cebola caramelizada, alface, tomate.", price: 27, category: "artesanais" },
-  { id: "p09", name: "Especial Mineiro", desc: "Brioche, blend 150g, queijo minas empanado, queijo (cheddar ou prato), cebola caramelizada, alface, tomate.", price: 26, category: "artesanais" },
 
   // Acompanhamentos
   { id: "a01", name: "Batata Frita — Simples", desc: "Porção crocante.", price: 15, category: "acompanhamentos" },
-  { id: "a02", name: "Batata Frita — Completa", desc: "Porção com adicionais.", price: 20, category: "acompanhamentos" },
-  { id: "a03", name: "Catupiry Empanado (unidade)", price: 6, category: "acompanhamentos" },
+  {
+    id: "a02",
+    name: "Batata Frita — Completa",
+    desc: "Escolha: bacon + cheddar, OU bacon + catupiry, OU bacon + cream cheese.",
+    price: 20,
+    category: "acompanhamentos",
+    options: ["Bacon + Cheddar", "Bacon + Catupiry", "Bacon + Cream Cheese"],
+  },
+  { id: "a03", name: "Catupiry Empanado (unidade)", price: 7, category: "acompanhamentos" },
+  {
+    id: "a04",
+    name: "Acréscimos",
+    desc: "Escolha: Cheddar, Catupiry ou Cream Cheese.",
+    price: 5,
+    category: "acompanhamentos",
+    options: ["Cheddar", "Catupiry", "Cream Cheese"],
+  },
 
   // Bebidas
   { id: "b01", name: "Refrigerante — Mini", price: 3, category: "bebidas" },
@@ -83,24 +105,58 @@ const ITEMS: Item[] = [
   { id: "b05", name: "Suco Natural da Casa", price: 5, category: "bebidas" },
 ];
 
-/** Utils */
-const currency = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+/** Helpers */
+const currency = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+/** cria a chave única por linha de carrinho:
+ *  - se tiver opção -> `${id}:${opção}`
+ *  - senão -> `id`
+ */
+const lineKeyOf = (item: Item, option?: string) =>
+  item.options?.length && option ? `${item.id}:${option}` : item.id;
 
 export default function Page() {
   const [active, setActive] = useState<Categoria>("tradicionais");
-  const [cart, setCart] = useState<Record<string, { item: Item; qty: number }>>({});
+
+  // carrinho por linha (id:opção)
+  const [cart, setCart] = useState<Record<string, CartLine>>({});
+
+  // opção selecionada por item (para o seletor do card)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
   function add(i: Item) {
-    setCart((c) => ({ ...c, [i.id]: { item: i, qty: (c[i.id]?.qty || 0) + 1 } }));
+    // se exige opção, garantir seleção
+    const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
+    if (i.options?.length && !chosen) {
+      alert(`Escolha uma opção para "${i.name}" antes de adicionar.`);
+      return;
+    }
+
+    const key = lineKeyOf(i, chosen);
+    setCart((c) => ({
+      ...c,
+      [key]: {
+        item: i,
+        qty: (c[key]?.qty || 0) + 1,
+        option: chosen,
+      },
+    }));
   }
+
   function sub(i: Item) {
+    const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
+    const key = lineKeyOf(i, chosen);
     setCart((c) => {
-      const n = { ...c };
-      if (!n[i.id]) return n;
-      n[i.id].qty -= 1;
-      if (n[i.id].qty <= 0) delete n[i.id];
-      return n;
+      if (!c[key]) return c;
+      const next = { ...c, [key]: { ...c[key], qty: c[key].qty - 1 } };
+      if (next[key].qty <= 0) delete next[key];
+      return next;
     });
+  }
+
+  function changeOption(itemId: string, value: string) {
+    setSelectedOptions((s) => ({ ...s, [itemId]: value }));
   }
 
   const items = useMemo(() => Object.values(cart), [cart]);
@@ -109,19 +165,19 @@ export default function Page() {
   function sendWhats() {
     if (!items.length) return alert("Seu pedido está vazio.");
     let text = "Olá! Gostaria de fazer o pedido:\n\n";
-    items.forEach(({ item, qty }) => (text += `• ${item.name} × ${qty} — ${currency(item.price)}\n`));
+    items.forEach(({ item, qty, option }) => {
+      text += `• ${item.name} × ${qty}`;
+      if (option) text += ` (${option})`;
+      text += ` — ${currency(item.price)}\n`;
+    });
     text += `\nTotal: ${currency(total)}\n`;
     window.location.href = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
   }
 
   return (
     <div className="min-h-screen">
-      {/* CATEGORIAS (destaque) */}
-      <nav
-        className="mx-auto max-w-screen-sm px-4 py-3 flex gap-2 overflow-x-auto
-                   bg-black/70 backdrop-blur rounded-xl border border-white/10
-                   shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
-      >
+      {/* CATEGORIAS */}
+      <nav className="mx-auto max-w-screen-sm px-4 py-3 flex gap-2 overflow-x-auto bg-black/70 backdrop-blur rounded-xl border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
@@ -140,57 +196,74 @@ export default function Page() {
           <section key={cat.id} className={active === cat.id ? "block" : "hidden"}>
             <h2 className="mt-5 mb-3 text-lg font-semibold">{cat.label}</h2>
             <div className="grid gap-4">
-              {ITEMS.filter((i) => i.category === cat.id).map((i) => (
-                <article key={i.id} className="card flex gap-3">
-                  {/* Foto do item (ou placeholder) */}
-                  <div className="w-20 h-20 rounded-lg border border-white/10 overflow-hidden bg-black/40">
-                    {i.image ? (
-                      <Image
-                        src={i.image}
-                        alt={i.name}
-                        width={84}
-                        height={84}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="grid place-items-center w-full h-full text-white/60 text-xs">
-                        84×84
-                      </div>
-                    )}
-                  </div>
+              {ITEMS.filter((i) => i.category === cat.id).map((i) => {
+                // quantidade exibida para itens com opção = qty da linha correspondente à opção selecionada
+                const displayQty = (() => {
+                  const chosen = i.options?.length ? selectedOptions[i.id] : undefined;
+                  const key = lineKeyOf(i, chosen);
+                  return cart[key]?.qty || 0;
+                })();
 
-                  <div className="flex-1">
-                    <p className="m-0 font-semibold">{i.name}</p>
-                    {i.desc && <p className="m-0 text-sm text-white/70">{i.desc}</p>}
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="font-extrabold">{currency(i.price)}</span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => sub(i)}
-                          className="w-8 h-8 rounded-md bg-black/50 border border-white/10"
-                          aria-label={`Remover ${i.name}`}
+                return (
+                  <article key={i.id} className="card flex gap-3">
+                    {/* thumb */}
+                    <div className="w-20 h-20 rounded-lg border border-white/10 overflow-hidden bg-black/40">
+                      {i.image ? (
+                        <Image src={i.image} alt={i.name} width={84} height={84} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid place-items-center w-full h-full text-white/60 text-xs">84×84</div>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="m-0 font-semibold">{i.name}</p>
+                      {i.desc && <p className="m-0 text-sm text-white/70">{i.desc}</p>}
+
+                      {/* seletor para itens com options */}
+                      {i.options && (
+                        <select
+                          value={selectedOptions[i.id] || ""}
+                          onChange={(e) => changeOption(i.id, e.target.value)}
+                          className="mt-2 w-full rounded-md border border-white/20 bg-black/40 text-sm p-2"
+                          aria-label={`Opção para ${i.name}`}
                         >
-                          –
-                        </button>
-                        <span className="w-6 text-center">{cart[i.id]?.qty || 0}</span>
-                        <button
-                          onClick={() => add(i)}
-                          className="w-8 h-8 rounded-md bg-emerald-500 text-emerald-950 font-bold"
-                          aria-label={`Adicionar ${i.name}`}
-                        >
-                          +
-                        </button>
+                          <option value="">Selecione uma opção</option>
+                          {i.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="font-extrabold">{currency(i.price)}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => sub(i)}
+                            className="w-8 h-8 rounded-md bg-black/50 border border-white/10"
+                            aria-label={`Remover ${i.name}`}
+                          >
+                            –
+                          </button>
+                          <span className="w-6 text-center">{displayQty}</span>
+                          <button
+                            onClick={() => add(i)}
+                            className="w-8 h-8 rounded-md bg-emerald-500 text-emerald-950 font-bold"
+                            aria-label={`Adicionar ${i.name}`}
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </section>
         ))}
       </main>
 
-      {/* BARRA DO CARRINHO */}
+      {/* CARRINHO */}
       <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/50 backdrop-blur">
         <div className="mx-auto max-w-screen-sm px-4 py-3 flex items-center gap-3">
           <div className="flex-1">

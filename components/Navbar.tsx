@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-screen-sm px-4 py-3 flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-white/5 grid place-items-center">
           {/* Coloque a logo em /public/logo.png (48–96 px) */}
-          <Image src="/logo.png" alt="Brasa Burguer" width={48} height={48} className="object-cover" />
+          <Image src="/logo.png" alt="Brasa Burguer" width={96} height={96} className="object-cover" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-2xl md:text-3xl font-extrabold leading-tight truncate">Brasa Burguer</div>
